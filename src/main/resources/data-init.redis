@@ -1,0 +1,30 @@
+# Test data for Redis
+# Run with: redis-cli < data-init.redis
+
+# Order ORD-1001
+HSET order:ORD-1001 customerId CUST-001
+HSET order:ORD-1001 status FILLED
+HSET order:ORD-1001 paymentStatus PAID
+HSET order:ORD-1001 totalAmount 100.00
+HSET order:ORD-1001 createdAt 2026-09-26T00:00:00
+HSET order:ORD-1001 updatedAt 2026-09-26T00:00:00
+
+# Order ORD-1002
+HSET order:ORD-1002 customerId CUST-001
+HSET order:ORD-1002 status PENDING
+HSET order:ORD-1002 paymentStatus PAYMENT_PENDING
+HSET order:ORD-1002 totalAmount 200.00
+HSET order:ORD-1002 createdAt 2026-09-26T00:00:00
+HSET order:ORD-1002 updatedAt 2026-09-26T00:00:00
+
+# Order ORD-1003
+HSET order:ORD-1003 customerId CUST-002
+HSET order:ORD-1003 status FAILED
+HSET order:ORD-1003 paymentStatus REFUNDED
+HSET order:ORD-1003 totalAmount 300.00
+HSET order:ORD-1003 createdAt 2026-09-26T00:00:00
+HSET order:ORD-1003 updatedAt 2026-09-26T00:00:00
+
+# Customer orders
+SADD customer:CUST-001:orders ORD-1001 ORD-1002
+SADD customer:CUST-002:orders ORD-1003
