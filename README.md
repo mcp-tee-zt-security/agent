@@ -13,9 +13,12 @@ AI Agent Client :8081
         v
 MCP Server :8080
         |
-        +-- OrderService
-        +-- CustomerOrderService
-        +-- PaymentService
+        +-- OrderController (REST API)
+        +-- OrderService (MCP Tool)
+        +-- CustomerOrderService (MCP Tool)
+        +-- PaymentService (MCP Tool)
+        |
+        +-- OrderRepository
         |
         v
 Redis :6379
@@ -29,8 +32,12 @@ Redis :6379
 * Spring Web MVC
 * Spring AI MCP Server
 * Spring Data Redis
+* Spring Validation
+* Lombok
+* SpringDoc OpenAPI (Swagger)
 * Redis 7
 * Docker
+* JUnit 5 + Mockito
 
 ## Configuration
 
@@ -103,104 +110,34 @@ customer:CUST-002:orders
   ORD-1003
 ```
 
-## MCP Tools
+## Architecture
 
-### OrderService
+### Layered Architecture
 
-#### getOrderStatus
+- **Controller Layer**: REST API endpoints for direct HTTP access
+- **Service Layer**: Business logic with MCP Tool annotations
+- **Repository Layer**: Data access layer for Redis operations
+- **Domain Layer**: Domain models (Order, OrderStatus, PaymentStatus)
+- **DTO Layer**: Data Transfer Objects for API requests/responses
+- **Exception Layer**: Custom exceptions and global error handling
 
-```text
-getOrderStatus(orderId)
-```
+### MCP Tools
 
-Returns the current order status from Redis.
+#### OrderService
 
-Example:
+- `getOrderStatus(orderId)`: Get the current order status
+- `getOrders(status)`: Get all orders, optionally filtered by status
+- `cancelOrder(orderId)`: Cancel an order (only PENDING orders)
+- `createOrder(customerId, totalAmount)`: Create a new order
 
-```text
-getOrderStatus("ORD-1001")
-        |
-        v
-Redis: order:ORD-1001
-        |
-        v
-FILLED
-```
+#### CustomerOrderService
 
-#### getOrders
+- `getCustomerOrders(customerId)`: Get all orders for a customer
 
-```text
-getOrders(status)
-```
+#### PaymentService
 
-Returns orders filtered by status.
-
-Example:
-
-```text
-getOrders("PENDING")
-```
-
-Result:
-
-```text
-ORD-1002: PENDING
-```
-
-#### cancelOrder
-
-```text
-cancelOrder(orderId)
-```
-
-Cancels an order only when the current status is `PENDING`.
-
-```text
-PENDING -> CANCELLED
-```
-
-Other order statuses cannot be cancelled.
-
-### CustomerOrderService
-
-```text
-getCustomerOrders(customerId)
-```
-
-Returns all orders belonging to a customer.
-
-Example:
-
-```text
-getCustomerOrders("CUST-001")
-```
-
-Result:
-
-```text
-ORD-1001
-ORD-1002
-```
-
-### PaymentService
-
-```text
-getPaymentStatus(orderId)
-```
-
-Returns the payment status of an order.
-
-Example:
-
-```text
-getPaymentStatus("ORD-1001")
-```
-
-Result:
-
-```text
-PAID
-```
+- `getPaymentStatus(orderId)`: Get payment status of an order
+- `processPayment(orderId, amount)`: Process payment for an order
 
 ## MCP Tool Registration
 
@@ -296,6 +233,34 @@ if (!"PENDING".equals(status)) {
 
 This keeps business rules and data access inside the backend.
 
+## Production-Ready Features
+
+### Error Handling
+- Custom exceptions for different error scenarios
+- Global exception handler with proper HTTP status codes
+- Structured error responses with timestamps
+
+### Validation
+- Input validation using Jakarta Validation
+- `@Valid` annotation on request bodies
+- Custom validation error messages
+
+### Logging
+- SLF4J logging throughout the application
+- Structured logs with contextual information
+- Different log levels (INFO, WARN, ERROR)
+
+### Testing
+- Unit tests for service layer
+- Mockito for mocking dependencies
+- JUnit 5 for test framework
+
+### Code Quality
+- Lombok for reducing boilerplate
+- Layered architecture for separation of concerns
+- Repository pattern for data access
+- DTO pattern for API contracts
+
 ## Example: Multi-Tool Workflow
 
 A user can ask:
@@ -334,6 +299,31 @@ ORD-1002: PAYMENT_PENDING
 getOrderStatus(orderId)
 getOrders(status)
 cancelOrder(orderId)
+createOrder(customerId, totalAmount)
 getCustomerOrders(customerId)
 getPaymentStatus(orderId)
+processPayment(orderId, amount)
+```
+
+## REST API Endpoints
+
+### Order Management
+
+- `GET /orders/{orderId}` - Get order details
+- `POST /orders` - Create a new order
+- `POST /orders/{orderId}/cancel` - Cancel an order
+- `POST /orders/{orderId}/payment` - Process payment
+- `GET /orders` - Get all orders
+- `GET /orders/customer/{customerId}` - Get customer orders
+
+### API Documentation
+
+Swagger UI is available at:
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+OpenAPI spec:
+```text
+http://localhost:8080/v3/api-docs
 ```
